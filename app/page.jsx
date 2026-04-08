@@ -8,6 +8,16 @@ export default function VelouraStreetStore() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cart, setCart] = useState([]);
 
+  const handleCheckout = async () => {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      body: JSON.stringify({ items: cart }),
+    });
+  
+    const data = await res.json();
+    window.location.href = data.url;
+  };
+
   const brandName = "Veloura Street";
 
   const heroCards = [
@@ -639,8 +649,11 @@ export default function VelouraStreetStore() {
                 <span>${cartTotal}</span>
               </div>
             </div>
-            <button className="mt-6 w-full rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white">
-              Checkout
+            <button
+              onClick={handleCheckout}
+              className="mt-6 w-full rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white"
+            >
+             Checkout
             </button>
           </div>
         </div>
