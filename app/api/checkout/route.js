@@ -4,12 +4,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { items } = await req.json();
+    const { items, customerEmail } = await req.json();
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      customer_email: customerEmail,
       line_items: items.map((item) => ({
         price_data: {
           currency: "usd",
@@ -20,7 +21,7 @@ export async function POST(req) {
         },
         quantity: 1,
       })),
-      success_url: `${origin}?success=true`,
+      success_url: `${origin}?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}?canceled=true`,
     });
 

@@ -11,6 +11,7 @@ export default function VelouraStreetStore() {
   const [checkoutStatus, setCheckoutStatus] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
+  const [sessionDetails, setSessionDetails] = useState(null);
 
   const brandName = "Veloura Street";
 
@@ -222,17 +223,35 @@ export default function VelouraStreetStore() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
+  
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
     const canceled = params.get("canceled");
-
+    const sessionId = params.get("session_id");
+  
+    const loadSession = async () => {
+      if (!sessionId) return;
+  
+      try {
+        const res = await fetch(`/api/checkout-session?session_id=${sessionId}`);
+        const data = await res.json();
+  
+        if (res.ok) {
+          setSessionDetails(data);
+          setCustomerEmail(data.customer_email || "");
+          setOrderNumber(data.id || "");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
     if (success === "true") {
       setCheckoutStatus("success");
       setCurrentPage("success");
       setCart([]);
-      setOrderNumber(`VS-${Math.floor(100000 + Math.random() * 900000)}`);
-      window.history.replaceState({}, "", window.location.pathname);
+      loadSession();
+      window.history.replaceState({}, "", window.location.pathname + `?success=true&session_id=${sessionId}`);
     } else if (canceled === "true") {
       setCheckoutStatus("canceled");
       setCurrentPage("cancel");
@@ -641,11 +660,11 @@ export default function VelouraStreetStore() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Order Number</p>
-              <p className="mt-1 text-lg font-bold text-zinc-900">{orderNumber || "VS-000000"}</p>
+              <p className="mt-1 text-lg font-bold text-zinc-900">{orderNumber || "Loading..."}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Confirmation Email</p>
-              <p className="mt-1 text-base font-semibold text-zinc-900">{customerEmail || "customer@example.com"}</p>
+              <p className="mt-1 text-base font-semibold text-zinc-900">{customerEmail || "Loading..."}</p>
             </div>
           </div>
         </div>
@@ -661,6 +680,14 @@ export default function VelouraStreetStore() {
           <div>
             <p className="font-semibold text-zinc-900">Email Update</p>
             <p className="mt-2">Confirmation pending setup</p>
+          </div>
+          <div>
+            <p className="font-semibold text-zinc-900">Amount Paid</p>
+            <p className="mt-2">
+            {sessionDetails?.amount_total
+            ? `$${(sessionDetails.amount_total / 100).toFixed(2)}`
+            : "Loading..."}
+            </p>
           </div>
         </div>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
