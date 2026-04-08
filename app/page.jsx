@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 
 export default function VelouraStreetStore() {
   const [search, setSearch] = useState("");
@@ -7,35 +8,7 @@ export default function VelouraStreetStore() {
   const [currentPage, setCurrentPage] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cart, setCart] = useState([]);
-
-  const handleCheckout = async () => {
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ items: cart }),
-      });
-  
-      const data = await res.json();
-  
-      if (!res.ok) {
-        alert(data.error || "Checkout failed");
-        return;
-      }
-  
-      if (!data.url) {
-        alert("No checkout URL returned");
-        return;
-      }
-  
-      window.location.href = data.url;
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong starting checkout");
-    }
-  };
+  const [checkoutStatus, setCheckoutStatus] = useState("");
 
   const brandName = "Veloura Street";
 
@@ -245,7 +218,54 @@ export default function VelouraStreetStore() {
     setCurrentPage("cart");
   };
 
-  
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const canceled = params.get("canceled");
+
+    if (success === "true") {
+      setCheckoutStatus("success");
+      setCurrentPage("success");
+      setCart([]);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (canceled === "true") {
+      setCheckoutStatus("canceled");
+      setCurrentPage("cancel");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  const handleCheckout = async () => {
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ items: cart }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Checkout failed");
+        return;
+      }
+
+      if (!data.url) {
+        alert("No checkout URL returned");
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong starting checkout");
+    }
+  };
+
   const NavButton = ({ label, page }) => (
     <button
       onClick={() => setCurrentPage(page)}
@@ -600,6 +620,74 @@ export default function VelouraStreetStore() {
     </section>
   );
 
+  const renderSuccess = () => (
+    <section className="mx-auto max-w-4xl px-6 py-16">
+      <div className="rounded-[2rem] border border-zinc-200 bg-white p-10 text-center shadow-sm">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">✓</div>
+        <p className="mt-6 text-sm uppercase tracking-[0.3em] text-zinc-500">Payment Successful</p>
+        <h2 className="mt-3 text-4xl font-bold">Thank you for your order.</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
+          Your checkout was completed successfully. This page confirms the order and gives the customer a clear next step.
+        </p>
+        <div className="mt-8 grid gap-4 rounded-[1.5rem] bg-zinc-50 p-6 text-left text-sm text-zinc-600 sm:grid-cols-3">
+          <div>
+            <p className="font-semibold text-zinc-900">Order Status</p>
+            <p className="mt-2">Confirmed</p>
+          </div>
+          <div>
+            <p className="font-semibold text-zinc-900">Delivery</p>
+            <p className="mt-2">Standard shipping</p>
+          </div>
+          <div>
+            <p className="font-semibold text-zinc-900">Email Update</p>
+            <p className="mt-2">Confirmation pending setup</p>
+          </div>
+        </div>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <button
+            onClick={() => setCurrentPage("shop")}
+            className="rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white"
+          >
+            Continue Shopping
+          </button>
+          <button
+            onClick={() => setCurrentPage("home")}
+            className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold hover:bg-zinc-50"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderCancel = () => (
+    <section className="mx-auto max-w-4xl px-6 py-16">
+      <div className="rounded-[2rem] border border-zinc-200 bg-white p-10 text-center shadow-sm">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-3xl">!</div>
+        <p className="mt-6 text-sm uppercase tracking-[0.3em] text-zinc-500">Checkout Canceled</p>
+        <h2 className="mt-3 text-4xl font-bold">Your payment was not completed.</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
+          No problem — the customer can return to the cart or continue browsing without losing momentum.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <button
+            onClick={() => setCurrentPage("cart")}
+            className="rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white"
+          >
+            Return to Cart
+          </button>
+          <button
+            onClick={() => setCurrentPage("shop")}
+            className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold hover:bg-zinc-50"
+          >
+            Keep Shopping
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+
   const renderCart = () => (
     <section className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8 flex items-end justify-between gap-4">
@@ -673,7 +761,7 @@ export default function VelouraStreetStore() {
               onClick={handleCheckout}
               className="mt-6 w-full rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white"
             >
-             Checkout
+              Checkout
             </button>
           </div>
         </div>
@@ -699,6 +787,7 @@ export default function VelouraStreetStore() {
             <NavButton label="About" page="about" />
             <NavButton label="Contact" page="contact" />
             <NavButton label="Cart" page="cart" />
+            <NavButton label="Success" page="success" />
           </nav>
 
           <div className="hidden flex-1 justify-center px-6 lg:flex">
@@ -732,6 +821,8 @@ export default function VelouraStreetStore() {
         {currentPage === "about" && renderAbout()}
         {currentPage === "contact" && renderContact()}
         {currentPage === "cart" && renderCart()}
+        {currentPage === "success" && renderSuccess()}
+        {currentPage === "cancel" && renderCancel()}
       </main>
 
       <section className="mx-auto max-w-7xl px-6 pb-14 pt-4">
@@ -808,5 +899,3 @@ export default function VelouraStreetStore() {
     </div>
   );
 }
-
-
