@@ -9,6 +9,8 @@ export default function VelouraStreetStore() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cart, setCart] = useState([]);
   const [checkoutStatus, setCheckoutStatus] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [orderNumber, setOrderNumber] = useState("");
 
   const brandName = "Veloura Street";
 
@@ -229,6 +231,7 @@ export default function VelouraStreetStore() {
       setCheckoutStatus("success");
       setCurrentPage("success");
       setCart([]);
+      setOrderNumber(`VS-${Math.floor(100000 + Math.random() * 900000)}`);
       window.history.replaceState({}, "", window.location.pathname);
     } else if (canceled === "true") {
       setCheckoutStatus("canceled");
@@ -238,13 +241,18 @@ export default function VelouraStreetStore() {
   }, []);
 
   const handleCheckout = async () => {
+    if (!customerEmail.trim()) {
+      alert("Please enter your email before checkout.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({ items: cart, customerEmail }),
       });
 
       const data = await res.json();
@@ -629,6 +637,18 @@ export default function VelouraStreetStore() {
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
           Your checkout was completed successfully. This page confirms the order and gives the customer a clear next step.
         </p>
+        <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-5 text-left text-sm text-zinc-600">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Order Number</p>
+              <p className="mt-1 text-lg font-bold text-zinc-900">{orderNumber || "VS-000000"}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Confirmation Email</p>
+              <p className="mt-1 text-base font-semibold text-zinc-900">{customerEmail || "customer@example.com"}</p>
+            </div>
+          </div>
+        </div>
         <div className="mt-8 grid gap-4 rounded-[1.5rem] bg-zinc-50 p-6 text-left text-sm text-zinc-600 sm:grid-cols-3">
           <div>
             <p className="font-semibold text-zinc-900">Order Status</p>
@@ -738,6 +758,18 @@ export default function VelouraStreetStore() {
           <div className="h-fit rounded-[2rem] border border-zinc-200 bg-white p-6 shadow-sm">
             <h3 className="text-2xl font-bold">Order Summary</h3>
             <div className="mt-6 space-y-3 text-sm text-zinc-600">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
+                  Email for receipt
+                </label>
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="h-12 w-full rounded-full border border-zinc-300 px-4 text-sm text-zinc-900 outline-none"
+                />
+              </div>
               <div className="flex items-center justify-between">
                 <span>Items</span>
                 <span>{cart.length}</span>
