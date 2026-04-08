@@ -9,13 +9,32 @@ export default function VelouraStreetStore() {
   const [cart, setCart] = useState([]);
 
   const handleCheckout = async () => {
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      body: JSON.stringify({ items: cart }),
-    });
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ items: cart }),
+      });
   
-    const data = await res.json();
-    window.location.href = data.url;
+      const data = await res.json();
+  
+      if (!res.ok) {
+        alert(data.error || "Checkout failed");
+        return;
+      }
+  
+      if (!data.url) {
+        alert("No checkout URL returned");
+        return;
+      }
+  
+      window.location.href = data.url;
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong starting checkout");
+    }
   };
 
   const brandName = "Veloura Street";
@@ -226,6 +245,7 @@ export default function VelouraStreetStore() {
     setCurrentPage("cart");
   };
 
+  
   const NavButton = ({ label, page }) => (
     <button
       onClick={() => setCurrentPage(page)}
