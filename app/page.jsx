@@ -656,19 +656,26 @@ export default function VelouraStreetStore() {
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
           Your checkout was completed successfully. This page confirms the order and gives the customer a clear next step.
         </p>
-        <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-5 text-left text-sm text-zinc-600">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Order Number</p>
-              <p className="mt-1 text-lg font-bold text-zinc-900">{orderNumber || "Loading..."}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Confirmation Email</p>
-              <p className="mt-1 text-base font-semibold text-zinc-900">{customerEmail || "Loading..."}</p>
-            </div>
-          </div>
+      <div className="mx-auto mt-6 max-w-4xl rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Order Number</p>
+            <p className="mt-2 text-lg font-bold text-zinc-900 break-all">{orderNumber
+            ? `VS-${orderNumber.slice(-8).toUpperCase()}`
+            : "Loading..."}
+            </p>
         </div>
-        <div className="mt-8 grid gap-4 rounded-[1.5rem] bg-zinc-50 p-6 text-left text-sm text-zinc-600 sm:grid-cols-3">
+
+      <div>
+        <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Confirmation Email</p>
+        <p className="mt-2 text-lg font-semibold text-zinc-900 break-all">
+        {customerEmail || "Loading..."}
+        </p>
+      </div>
+
+    </div>
+</div>
+        <div className="mt-8 grid gap-4 rounded-[1.5rem] bg-zinc-50 p-6 text-left text-sm text-zinc-600 md:grid-cols-4">
           <div>
             <p className="font-semibold text-zinc-900">Order Status</p>
             <p className="mt-2">Confirmed</p>
